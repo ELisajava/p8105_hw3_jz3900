@@ -418,7 +418,7 @@ p1 + p2 + p3
 * The plot shows clear differences in daily physical activity patterns by education level and gender. Activity generally peaks around midday for all groups, likely due to routines like commuting, work, or exercise. Those with higher education levels maintain more structured and higher activity throughout the day, suggesting better health awareness or access to physical activities. Women tend to have higher activity levels than men, especially in the "High School Equivalent" and "More than High School" groups, indicating more involvement in organized activities. In contrast, those with less than a high school education show lower activity peaks, possibly due to more sedentary behavior. Activity levels decrease sharply in the evening, likely reflecting rest periods. These insights highlight the need for strategies to promote physical activity, especially among those with lower education levels and in the evening to reduce sedentary time.
 
 # Problem 3
-## Step 1:Import and organize the dataset
+## Step 1: Import and organize the dataset
 ### Import four datasets
 ```{r}
 Jan_2020_Citi <- read_csv("./dataset/citibike/Jan\ 2020\ Citi.csv", show_col_types = FALSE)
@@ -580,7 +580,7 @@ popular_stations %>%
 * Chelsea Piers stands out as a major attraction, making it the most popular station.
 
 ## Step 4: Make a plot to investigate the effects of day of the week, month, and year on median ride duration.
-### Calculate median ride duration
+### Calculate median ride duration and explore the influential factors
 ```{r}
 # Calculate the median ride duration for each combination of year, month, and weekday
 median_duration_data <- citi_data %>% 
