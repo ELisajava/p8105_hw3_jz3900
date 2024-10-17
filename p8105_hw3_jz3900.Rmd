@@ -39,3 +39,228 @@ options(
 discrete_color_scale <- scale_color_viridis_d
 discrete_fill_scale <- scale_fill_viridis_d
 ```
+
+# Problem 1
+* Write a short description of the dataset.
+* Clean the data. Create separate variables for year, month, and day. Ensure observations for temperature, precipitation, and snowfall are given in reasonable units.
+* Make a two-panel plot showing the average max temperature in January and in July in each station across years.
+* Make a two-panel plot showing (i) tmax vs tmin for the full dataset; (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+
+## Step 1: Import and describe the dataset
+```{r}
+# Load the dataset (can be skipped)
+data("ny_noaa")
+
+# Display the structure of the dataset
+str(ny_noaa)
+
+# Get the number of rows and columns (can be displayed in last code)
+nrow(ny_noaa)
+ncol(ny_noaa)
+
+# Display the dimensions of the dataset
+dim(ny_noaa)
+
+# Summarize the dataset
+summary(ny_noaa)
+```
+### A short description of the dataset
+
+* The ny_noaa dataset have 2595176 columns (observations) and 7 columns (variables). 
+* The variables includes: 
+  * id: Weather station identifier,
+  * date: Date of the observation,
+  * prcp: Precipitation (tenths of mm),
+  * snow: Snowfall (mm),
+  * snwd: Snow depth (mm),
+  * tmax: Maximum temperature (tenths of degrees C),
+  * tmin: Minimum temperature (tenths of degrees C).
+* Information on statistics：
+  * prcp: Mean: 29.82, Min: 0.00, Max: 22860.00; 
+  * snow: Mean: 5, Min: -13, Max: 10160; 
+  * snwd: Mean 37.3, Min: 0.0, Max: 9195.0. 
+* Note: Some variables contain missing values.
+
+## Step 2: Missing data
+```{r}
+# Caculate the missing data percentages
+ny_noaa %>%
+  summarise(
+    missing_prcp = mean(is.na(prcp)) * 100,
+    missing_snow = mean(is.na(snow)) * 100,
+    missing_snwd = mean(is.na(snwd)) * 100,
+    missing_tmax = mean(is.na(tmax)) * 100,
+    missing_tmin = mean(is.na(tmin)) * 100
+  )
+
+```
+### Description of missing data:
+  * Approximately 5.62% of the prcp values are missing, 
+  * Approximately 14.68% of the snow values are missing,
+  * Approximately 22.80% of the snwd values are missing, 
+  * Approximately 43.69% of the tmax values and 46.23% of the tmin values are missing. The proportion of missing data for both tmax and tmin is notably high.
+
+## Step 3: Data cleaning
+```{r}
+# Create separate variables for year, month, and day
+ny_noaa = ny_noaa %>%
+  mutate(
+    year = year(date),
+    month = month(date),
+    day = day(date)
+  )
+
+# Convert `prcp`, `tmax`, and `tmin` to numeric format before unit conversion
+ny_noaa = ny_noaa %>%
+  mutate(
+    prcp = as.numeric(prcp),
+    tmax = as.numeric(tmax),
+    tmin = as.numeric(tmin)
+  )
+
+# Adjust units for temperature and precipitation
+ny_noaa = ny_noaa %>%
+  mutate(
+    prcp = prcp/10,  # Precipitation converts from tenths of mm to mm.
+    tmax = tmax/10,  # Max temp converts from tenths of degrees Celsius to degrees Celsius.
+    tmin = tmin/10   # Min temp converts from tenths of degrees Celsius to degrees Celsius.
+  )
+
+```{r}
+# Ensure logical consistency in temperature data (tmax data is higher than tmin data)
+ny_noaa = ny_noaa %>%
+  filter(tmax > tmin | is.na(tmax) | is.na(tmin))  
+
+# Filter rows with missing values in key variables (snow, snwd, tmax, tmin, prcp)
+ny_noaa = ny_noaa %>%
+  filter(!(is.na(snow) & is.na(snwd) & is.na(tmax) & is.na(tmin) & is.na(prcp)))
+head(ny_noaa)
+```
+
+### Q 1: For snowfall, what are the most commonly observed values? Why?
+```{r}
+# Count the occurrences of each snowfall value
+snow_counts = ny_noaa %>%
+  count(snow) %>%
+  arrange(desc(n))
+
+# Display the most common snowfall values
+head(snow_counts)
+str(ny_noaa)
+```
+
+* Answer of Q 1:
+- The most commonly observed value for snowfall is 0 mm, with 2,008,508 occurrences.
+- A possible reason for this is that snowfall does not occur daily and is primarily concentrated in the winter months.
+
+## Step 4: Data Visualization:
+## Part 1: Average Max Temperature in January and July Across Years
+```{r}
+# Filter data for January and July
+temp_jan_jul = ny_noaa %>%
+  filter(month %in% c(1, 7)) %>%
+  group_by(id, year, month) %>%
+  summarise(
+    avg_tmax = mean(tmax, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(month = case_when(
+    month == 1 ~ "January",
+    month == 7 ~ "July"
+  ))
+
+# Visualization for January
+plot_jan <- ggplot(subset(temp_jan_jul, month == "January"), 
+                   aes(x = year, y = avg_tmax, group = id, col = id)) +
+  geom_point(alpha = 0.5) +
+  labs(
+    title = "Average Max Temperature in January",
+    x = "Year",
+    y = "Average Max Temperature (°C)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+)
+
+# Visualization for July
+plot_jul <- ggplot(subset(temp_jan_jul, month == "July"), 
+                   aes(x = year, y = avg_tmax, group = id, col = id)) +
+  geom_point(alpha = 0.5) +
+  labs(
+    title = "Average Max Temperature in July",
+    x = "Year",
+    y = "Average Max Temperature (°C)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+)
+
+# Combine the two plots using patchwork library
+combined_plot <- plot_jan / plot_jul
+combined_plot + plot_layout(heights = c(1, 1))
+```
+
+### Q 2: Is there any observable / interpretable structure? Any outliers?
+
+* Structure:
+
+  * Temperature Separation: January temperatures are colder, ranging approximately from -10°C to 10°C, while July temperatures are much warmer, around 20°C to 35°C.
+  * Variation: January shows more variation across years, with temperatures fluctuating widely. July has a more stable temperature range, with most values clustered between 25°C and 30°C.
+* Trend: 
+
+A slight upward trend in January’s temperatures is visible over time, while July’s temperatures remain largely stable.
+
+* Outliers:
+
+  * January: A few years have unusually cold temperatures, dipping below -10°C, which stand out as extreme values.
+  * July: There are some outliers below 20°C, indicating unusually cool summers in certain years.
+
+## Part 2: tmax vs tmin Plot and Snowfall Distribution
+### tmax vs tmin Plot
+```{r}
+# Hexbin plot for tmax vs tmin
+p_temp = ggplot(ny_noaa, aes(x = tmin, y = tmax)) +
+  geom_hex(bins = 50) +
+  labs(
+    title = "Relationship Between Minimum and Maximum Temperatures",
+    x = "Minimum Temperature (°C)",
+    y = "Maximum Temperature (°C)"
+  ) +
+  theme_minimal()+
+  theme(
+     plot.title = element_text(hjust = 0.5)
+  )
+```
+
+### Snowfall Distribution by Year
+```{r}
+### Snowfall Distribution by Year
+# Filter snowfall data
+snowfall_filtered = ny_noaa %>%
+  filter(snow > 0, snow < 100)
+
+# Plot snowfall distribution by year using boxplots
+p_snow = ggplot(snowfall_filtered, aes(x = factor(year), y = snow)) +
+  geom_boxplot(outlier.size = 0.5, alpha = 0.7) +
+  labs(
+    title = "Distribution of Snowfall by Year",
+    x = "Year",
+    y = "Snowfall (mm)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1),
+    panel.grid.major.x = element_blank(),
+    plot.title = element_text(hjust = 0.5) 
+  )
+
+# Fix: ensure correct color scale for hex plot
+p_temp = p_temp + scale_fill_viridis_c(option = "magma")
+
+# Combine the temperature and snowfall plots
+p_temp + p_snow + plot_layout(ncol = 1)
+```
