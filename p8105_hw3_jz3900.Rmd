@@ -264,3 +264,154 @@ p_temp = p_temp + scale_fill_viridis_c(option = "magma")
 # Combine the temperature and snowfall plots
 p_temp + p_snow + plot_layout(ncol = 1)
 ```
+
+# Problem 2
+
+* Load, tidy, merge, and organize the data sets: (1) include all originally observed variables); (2) exclude participants less than 21 years of age; (3) exclude those with missing demographic data; (4) encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
+
+* Produce a reader-friendly table for the number of men and women in each education category, and create a visualization of the age distributions for men and women in each education category. Comment on these items.
+
+* Using the tidied dataset, aggregate across minutes to create a total activity variable for each participant. Plot these total activities (y-axis) against age (x-axis); your plot should compare men to women and have separate panels for each education level. Include a trend line or a smooth to illustrate differences. Comment on your plot.
+
+* Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based on this graph; including smooth trends may help identify differences.
+
+## Step 1: Load and Organize the Data Sets
+```{r}
+# Load the data sets
+demographics <- read.csv(file = "./dataset/nhanes_covar.csv", skip = 4)
+accelerometer <- read.csv(file = "./dataset/nhanes_accel.csv")
+
+# Check structure and summary of both data sets
+str(demographics)
+summary(demographics)
+
+str(accelerometer)
+summary(accelerometer)
+
+# Filter out participants younger than 21 years old and remove missing data in the demographic dataset
+demographics <- demographics %>%
+  filter(age >= 21) %>%
+  drop_na()
+
+# Merge the two datasets by SEQN
+data <- inner_join(accelerometer, demographics, by = "SEQN") %>%
+  pivot_longer(
+    cols = starts_with("min"),
+    names_to = "minute_interval",
+    values_to = "MIMS"
+  ) %>%
+  mutate(
+    sex = factor(sex, levels = c(1, 2), labels = c("male", "female")),
+    education = factor(education, levels = c(1, 2, 3), labels = c("Less than high school", "High school equivalent", "More than high school")),
+    minute_interval = str_replace(minute_interval, "min", "")
+  )
+```
+* I merged the datasets and excluded participants who were younger than 21 years old or had missing demographic information. I transformed the variables for sex and education into categorical factors, assigning the labels "male" and "female" for sex, and "Less than high school," "High school equivalent," and "More than high school" for education. Additionally, I stripped the "min" strings from the minute_interval variable.
+
+## Step 2: Creat a readable table
+```{r}
+# Select distinct participant data based on SEQN, sex, and education
+participant_data <- data %>%
+  select(SEQN, sex, education) %>%
+  distinct()
+
+# Summarize participant count by sex and education
+num_data <- participant_data %>%
+  group_by(sex, education) %>%
+  summarise(number = n(), .groups = "drop")
+
+# Reshape the data for better readability
+readable_data <- num_data %>%
+  pivot_wider(
+    names_from = education,
+    values_from = number
+  )
+
+# Display the table
+print(readable_data)
+
+# Create a bar plot of participant counts
+p1 <- ggplot(num_data, aes(x = education, y = number, fill = sex)) +
+  geom_col(position = position_dodge2()) +
+  geom_text(aes(label = number), position = position_dodge2(width = 0.9), vjust = -0.5) +
+  theme_minimal() +
+  labs(title = "Number of Participants by Sex and Education", x = "Education Level", y = "Count of Participants") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 0.75))
+
+# Create a proportional bar plot by education level and sex
+p2 <- ggplot(participant_data, aes(x = education, fill = sex)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal() +
+  labs(title = "Proportion of Sex within Education Level", x = "Education Level", y = "Proportion") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 0.75),
+        plot.title = element_text(hjust = 0.5)
+        )
+
+# Combine the two plots side by side
+combined_plot <- p1 + p2 + plot_layout(ncol = 2)
+combined_plot
+```
+
+
+* I started by generating a table that shows the count of men and women across various education levels. To enhance readability, I reformatted the table using the `pivot_wider` function. The resulting plot indicates that individuals with more than a high school education make up the largest proportion for both sexes. Moreover, there are fewer men than women in the "Less than high school" category, while more men than women fall into the "High school equivalent" category.
+
+## Step 3: Aggregate Total Activity
+```{r}
+# Summarize total activity for each participant
+total_activity_data <- data %>%
+  group_by(SEQN, sex, age, education) %>%
+  summarise(total_activity = sum(MIMS, na.rm = TRUE), .groups = "drop")
+
+# Plot total activity vs age by sex, with separate panels for education levels
+total_activity_plot <- ggplot(total_activity_data, aes(x = age, y = total_activity, color = sex)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "loess", se = FALSE) +
+  facet_wrap(~ education) +
+  labs(title = "Total Activity vs Age by Sex and Education Level", x = "Age", y = "Total Activity (MIMS)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 0.75),
+        plot.title = element_text(hjust = 0.5)  
+  )
+
+# Display the plot
+print(total_activity_plot)
+```
+
+* In the graph, male data is shown in red and female data in blue. Overall, women's total activity levels are higher than men's across all ages in the two right-hand graphs. In the left graph, women's total activity exceeds men's until around age 40, after which it falls below men's. In terms of overall trends, total activity decreases for all education levels after around age 60. Those with less than a high school education reach their highest activity levels around age 20, while individuals with a high school equivalent education peak around age 40. People with more than a high school education maintain relatively high activity levels up to age 60.
+
+## Step 4: Create a three-panel plot
+```{r}
+# Function to generate activity plots with refinements
+generate_activity_plot <- function(education_category, plot_title) {
+  activity_data <- data %>%
+    filter(education == education_category) %>%
+    mutate(hour_interval = as.numeric(minute_interval) %/% 60) %>%  # Grouping by hour
+    group_by(hour_interval, sex) %>%  # Group by hour and sex
+    summarise(mean_activity_per_hour = mean(MIMS, na.rm = TRUE), .groups = "drop")
+  
+  ggplot(activity_data, aes(x = hour_interval, y = mean_activity_per_hour, color = sex)) +
+    geom_point(alpha = 0.5) +
+    geom_smooth(method = "loess", se = FALSE) +
+    theme_minimal() +
+    theme(
+      legend.position = "bottom",
+      plot.title = element_text(hjust = 0.5)  # Centering the title
+    ) +
+    labs(
+      title = plot_title,
+      x = "Hour of the Day",
+      y = "Mean MIMS per Hour"
+    )
+}
+
+# Generate plots for different education levels
+p1 <- generate_activity_plot("Less than high school", "Less than High School")
+p2 <- generate_activity_plot("High school equivalent", "High School Equivalent")
+p3 <- generate_activity_plot("More than high school", "More than High School")
+
+# Combine the plots
+p1 + p2 + p3
+``` 
+
+* The plot shows clear differences in daily physical activity patterns by education level and gender. Activity generally peaks around midday for all groups, likely due to routines like commuting, work, or exercise. Those with higher education levels maintain more structured and higher activity throughout the day, suggesting better health awareness or access to physical activities. Women tend to have higher activity levels than men, especially in the "High School Equivalent" and "More than High School" groups, indicating more involvement in organized activities. In contrast, those with less than a high school education show lower activity peaks, possibly due to more sedentary behavior. Activity levels decrease sharply in the evening, likely reflecting rest periods. These insights highlight the need for strategies to promote physical activity, especially among those with lower education levels and in the evening to reduce sedentary time.
