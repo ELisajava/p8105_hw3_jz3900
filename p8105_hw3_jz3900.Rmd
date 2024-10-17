@@ -9,3 +9,33 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Load Necessary Libraries
+```{r}
+library(tidyverse) 
+library(ggplot2)
+library(lubridate)
+library(ggridges)
+library(patchwork) #For combining plots
+library(hexbin) #For hexbin plots
+library(gt)
+library(p8105.datasets)
+```
+
+# Configure Global Plot Settings
+```{r}
+knitr::opts_chunk$set(
+  fig.width = 10,
+  fig.asp = 0.8,
+  out.width = '90%'
+)
+
+## Setting color options globally
+options(
+  ggplot2.continuous.color = "magma",
+  ggplot2.continuous.fill = "magma"
+)
+
+## Assigning scales for discrete color and fill
+discrete_color_scale <- scale_color_viridis_d
+discrete_fill_scale <- scale_fill_viridis_d
+```
