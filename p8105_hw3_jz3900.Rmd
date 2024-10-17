@@ -48,15 +48,11 @@ discrete_fill_scale <- scale_fill_viridis_d
 
 ## Step 1: Import and describe the dataset
 ```{r}
-# Load the dataset (can be skipped)
+# Load the dataset
 data("ny_noaa")
 
 # Display the structure of the dataset
 str(ny_noaa)
-
-# Get the number of rows and columns (can be displayed in last code)
-nrow(ny_noaa)
-ncol(ny_noaa)
 
 # Display the dimensions of the dataset
 dim(ny_noaa)
@@ -150,8 +146,8 @@ str(ny_noaa)
 ```
 
 * Answer of Q 1:
-- The most commonly observed value for snowfall is 0 mm, with 2,008,508 occurrences.
-- A possible reason for this is that snowfall does not occur daily and is primarily concentrated in the winter months.
+  * The most commonly observed value for snowfall is 0 mm, with 2,008,508 occurrences.
+  * A possible reason for this is that snowfall does not occur daily and is primarily concentrated in the winter months.
 
 ## Step 4: Data Visualization:
 ## Part 1: Average Max Temperature in January and July Across Years
@@ -181,7 +177,7 @@ plot_jan <- ggplot(subset(temp_jan_jul, month == "January"),
   theme_minimal() +
   theme(
     legend.position = "none",
-    plot.title = element_text(hjust = 0.5)
+    plot.title = element_text(hjust = 0.5,size=15)
 )
 
 # Visualization for July
@@ -196,7 +192,7 @@ plot_jul <- ggplot(subset(temp_jan_jul, month == "July"),
   theme_minimal() +
   theme(
     legend.position = "none",
-    plot.title = element_text(hjust = 0.5)
+    plot.title = element_text(hjust = 0.5,size=15)
 )
 
 # Combine the two plots using patchwork library
@@ -210,9 +206,10 @@ combined_plot + plot_layout(heights = c(1, 1))
 
   * Temperature Separation: January temperatures are colder, ranging approximately from -10°C to 10°C, while July temperatures are much warmer, around 20°C to 35°C.
   * Variation: January shows more variation across years, with temperatures fluctuating widely. July has a more stable temperature range, with most values clustered between 25°C and 30°C.
+  
 * Trend: 
 
-A slight upward trend in January’s temperatures is visible over time, while July’s temperatures remain largely stable.
+  * A slight upward trend in January’s temperatures is visible over time, while July’s temperatures remain largely stable.
 
 * Outliers:
 
@@ -232,7 +229,7 @@ p_temp = ggplot(ny_noaa, aes(x = tmin, y = tmax)) +
   ) +
   theme_minimal()+
   theme(
-     plot.title = element_text(hjust = 0.5)
+     plot.title = element_text(hjust = 0.5,size=15)
   )
 ```
 
@@ -255,7 +252,7 @@ p_snow = ggplot(snowfall_filtered, aes(x = factor(year), y = snow)) +
   theme(
     axis.text.x = element_text(angle = 90, hjust = 1),
     panel.grid.major.x = element_blank(),
-    plot.title = element_text(hjust = 0.5) 
+    plot.title = element_text(hjust = 0.5,size=15) 
   )
 
 # Fix: ensure correct color scale for hex plot
@@ -327,8 +324,10 @@ readable_data <- num_data %>%
     values_from = number
   )
 
-# Display the table
-print(readable_data)
+# Create a more readable table
+readable_data%>%
+  gt() %>%
+  tab_header(title = "Number of Men and Women in Each Education Category")
 
 # Create a bar plot of participant counts
 p1 <- ggplot(num_data, aes(x = education, y = number, fill = sex)) +
@@ -336,7 +335,9 @@ p1 <- ggplot(num_data, aes(x = education, y = number, fill = sex)) +
   geom_text(aes(label = number), position = position_dodge2(width = 0.9), vjust = -0.5) +
   theme_minimal() +
   labs(title = "Number of Participants by Sex and Education", x = "Education Level", y = "Count of Participants") +
-  theme(axis.text.x = element_text(angle = 30, hjust = 0.75))
+  theme(axis.text.x = element_text(angle = 30, hjust = 0.75),
+        plot.title = element_text(hjust = 0.5,size=15)
+        )
 
 # Create a proportional bar plot by education level and sex
 p2 <- ggplot(participant_data, aes(x = education, fill = sex)) +
@@ -345,7 +346,7 @@ p2 <- ggplot(participant_data, aes(x = education, fill = sex)) +
   theme_minimal() +
   labs(title = "Proportion of Sex within Education Level", x = "Education Level", y = "Proportion") +
   theme(axis.text.x = element_text(angle = 30, hjust = 0.75),
-        plot.title = element_text(hjust = 0.5)
+        plot.title = element_text(hjust = 0.5,size=15)
         )
 
 # Combine the two plots side by side
@@ -371,7 +372,7 @@ total_activity_plot <- ggplot(total_activity_data, aes(x = age, y = total_activi
   labs(title = "Total Activity vs Age by Sex and Education Level", x = "Age", y = "Total Activity (MIMS)") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 30, hjust = 0.75),
-        plot.title = element_text(hjust = 0.5)  
+        plot.title = element_text(hjust = 0.5,size=15)  
   )
 
 # Display the plot
@@ -396,11 +397,11 @@ generate_activity_plot <- function(education_category, plot_title) {
     theme_minimal() +
     theme(
       legend.position = "bottom",
-      plot.title = element_text(hjust = 0.5)  # Centering the title
+      plot.title = element_text(hjust = 0.5,size=15)  # Centering the title
     ) +
     labs(
       title = plot_title,
-      x = "Hour of the Day",
+      x = "Hour Interval",
       y = "Mean MIMS per Hour"
     )
 }
@@ -477,8 +478,8 @@ citi_data <- citi_data %>%
 glimpse(citi_data)
 ```
 ### Description of the resulting dataset:
-This dataset contains information on Citi Bike rides taken in New York City during January and July of 2020 and 2024.
-The key columns (variables) include:
+* This dataset contains information on Citi Bike rides taken in New York City during January and July of 2020 and 2024.
+* The key columns (variables) include:
   * ride_id: Unique identifier for each ride.
   * member_casual: Rider type, either member or casual riders.
   * rideable_type: Type of bike, either classic_bike or electric_bike.
@@ -489,7 +490,7 @@ The key columns (variables) include:
   * start_station_name: Starting stations name.
   * end_station_name: ending stations name.
   * dataset: Indicates the dataset source (e.g., Jan_2020_Citi).
-This dataset is prepared for analyzing ridership trends, user behavior, and ride patterns across various time periods and rider types.
+* This dataset is prepared for analyzing ridership trends, user behavior, and ride patterns across various time periods and rider types.
 
 ## Step 2: Produce a reader-friendly table
 ```{r}
@@ -523,6 +524,7 @@ pivoted_table %>%
 
 ### Comment on these results:
 The table now features a 'Total Rides; column, making it easy to view the combined ride totals for both members and casual riders across each time period. This layout highlights overall ridership trends while still offering a clear breakdown between the two rider types.
+
  * Casual vs. Member Rides:  
 Members consistently take a higher number of rides compared to casual    riders, which aligns with the understanding that members are frequent, regular users, while casual riders are typically occasional users or tourists.
 
@@ -600,7 +602,7 @@ ggplot(median_duration_data, aes(x = weekdays, y = median_duration, fill = facto
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
-    plot.title = element_text(hjust = 0.5) 
+    plot.title = element_text(hjust = 0.5,size=15) 
   )
 ```
 
@@ -633,7 +635,7 @@ ggplot(citi_data_2024, aes(x = rideable_type, y = duration, fill = member_casual
        fill = "Rider Type") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1), # Tilt the x-axis labels for readability
-        plot.title = element_text(hjust = 0.5)
+        plot.title = element_text(hjust = 0.5, size=15)
   )
 ```
 
@@ -648,7 +650,7 @@ In July, ride durations vary more widely than in January, likely because the war
 Casual riders generally have longer ride durations than members, regardless of bike type, with the difference being especially pronounced for classic bikes. This suggests that casual users may be taking longer, more recreational trips, while members focus on shorter, more practical rides.
 
  * Ride Duration Patterns:  
-The data shows more outliers—very long rides—among casual riders on classic bikes, especially in July. This suggests that some casual riders take much longer trips during the summer months.
+The data shows more outliers (very long rides) among casual riders on classic bikes, especially in July. This suggests that some casual riders take much longer trips during the summer months.
 
 Summary:  
-Electric bikes lead to quicker, shorter rides, particularly for members, while casual riders tend to take longer rides, especially on classic bikes, with longer trips being more frequent during the summer.
+Electric bikes lead to quicker, shorter rides, particularly for members, while casual riders tend to take longer rides, especially on classic bikes, with longer trips being more frequent during the summer month.
