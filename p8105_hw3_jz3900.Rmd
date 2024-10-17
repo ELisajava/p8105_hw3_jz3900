@@ -1,0 +1,11 @@
+---
+title: "p8105_hw3_jz3900"
+author: "ELisajava"
+date: "2024-10-15"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
