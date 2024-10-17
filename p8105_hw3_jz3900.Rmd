@@ -275,15 +275,12 @@ p_temp + p_snow + plot_layout(ncol = 1)
 ## Step 1: Load and Organize the Data Sets
 ```{r}
 # Load the data sets
-demographics <- read.csv(file = "./dataset/nhanes_covar.csv", skip = 4)
-accelerometer <- read.csv(file = "./dataset/nhanes_accel.csv")
+demographics <- read_csv(file = "./dataset/nhanes_covar.csv", skip = 4)
+accelerometer <- read_csv(file = "./dataset/nhanes_accel.csv")
 
 # Check structure and summary of both data sets
-str(demographics)
-summary(demographics)
-
-str(accelerometer)
-summary(accelerometer)
+glimpse(demographics)
+accelerometer %>% select(1:6) %>% glimpse()
 
 # Filter out participants younger than 21 years old and remove missing data in the demographic dataset
 demographics <- demographics %>%
