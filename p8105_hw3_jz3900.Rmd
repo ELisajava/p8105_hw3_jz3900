@@ -355,22 +355,22 @@ ggplot(data, aes(x = age, fill = sex)) +
         plot.title = element_text(hjust = 0.5, size=15))  
 ```
 
-* This density map illustrates the distribution of age by education level and gender:
+* This density map shows the distribution of age by education level and gender:
 
-  * Less than high school: Men are mostly concentrated between ages 40 and 60, while women are primarily above 60.
+  * Less than high school: Men concentrated between 40–60 years, women mostly above 60. 
   
-  * High school equivalent: Women are mostly between 40 and 60 years old, while men cover a wider age range. Women's distribution shows a narrower concentration compared to men, particularly between ages 40 and 60.
+  * High school equivalent: Men mostly between 40–60 years, men have a broader age range. Women are mainly concentrated above 60, showing a narrower range compared to men.
   
-  * More than high school: Men's distribution peaks between ages 40 and 70, tapering gradually toward 80. Women's distribution is similar, with a slight peak between 50 and 60.
+  * More than high school: Men has the distribution peaks around ages 40 to 70, with a gradual taper toward 80, and women is similar to men, with a slight peak between 50 and 60. 
 
 * Comment:
 
-  * In lower education levels, women tend to be older than men, especially in the "less than high school" group.
+  * In lower education categories, women tend to be older than men, especially in the “less than high school” group.
   
-  * In the "high school equivalent" group, men exhibit a much wider age range than women.
+  * In the “high school equivalent” group, men have a much wider age range than women.
   
-  * In the "more than high school" group, men and women have nearly identical age distributions, suggesting less gender disparity in age among those with higher education levels.
-
+  * In the “more than high school” group, men and women show nearly identical age distributions, indicating less gender disparity in age for those with higher education levels.
+  
 ```{r}
 # Create a box plot of age by gender and education
 ggplot(data, aes(x = education, y = age, fill = sex)) +
@@ -428,7 +428,8 @@ generate_activity_plot <- function(education_category, plot_title) {
     theme_minimal() +
     theme(
       legend.position = "bottom",
-      plot.title = element_text(hjust = 0.5,size=15)  # Centering the title
+      plot.title = element_text(hjust = 0.5,size=15),  # Centering the title
+   plot.margin = unit(c(2, 1, 1, 1), "cm")  # Add more space on top (2 cm) to create room for the title
     ) +
     labs(
       title = plot_title,
@@ -442,8 +443,19 @@ p1 <- generate_activity_plot("Less than high school", "Less than High School")
 p2 <- generate_activity_plot("High school equivalent", "High School Equivalent")
 p3 <- generate_activity_plot("More than high school", "More than High School")
 
-# Combine the plots
-p1 + p2 + p3
+# Use the grid system to add a global title on top
+grid::grid.newpage()  # Start a new page for the combined plots
+grid::grid.text("24-Hour Activity Time Courses by Education Level and Sex", 
+                gp = grid::gpar(fontsize = 20, fontface = "bold"), 
+                y = 0.98)  # Move the title higher to avoid overlap with plots
+
+# Set layout to 1 row and 3 columns (for side-by-side plots)
+grid::pushViewport(grid::viewport(layout = grid::grid.layout(1, 3)))  # Change layout to 1 row, 3 columns
+
+# Print each plot in a specific column of the layout
+print(p1, vp = grid::viewport(layout.pos.row = 1, layout.pos.col = 1))  # First plot in first column
+print(p2, vp = grid::viewport(layout.pos.row = 1, layout.pos.col = 2))  # Second plot in second column
+print(p3, vp = grid::viewport(layout.pos.row = 1, layout.pos.col = 3))  # Third plot in third column
 ``` 
 
 * The plot shows clear differences in daily physical activity patterns by education level and gender. Activity generally peaks around midday for all groups, likely due to routines like commuting, work, or exercise. Those with higher education levels maintain more structured and higher activity throughout the day, suggesting better health awareness or access to physical activities. Women tend to have higher activity levels than men, especially in the "High School Equivalent" and "More than High School" groups, indicating more involvement in organized activities. In contrast, those with less than a high school education show lower activity peaks, possibly due to more sedentary behavior. Activity levels decrease sharply in the evening, likely reflecting rest periods. These insights highlight the need for strategies to promote physical activity, especially among those with lower education levels and in the evening to reduce sedentary time.
